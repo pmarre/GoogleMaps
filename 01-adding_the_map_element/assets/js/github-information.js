@@ -5,7 +5,7 @@ const userInformationHTML = user => {
     </span>
     </h2>
     <div class="gh-content">
-    <div class="gh-avatar>
+    <div class="gh-avatar">
     <a href="${user.html_url}" target="_blank">
         <img src="${user.avatar_url}" width="80px" height="80px" alt="${user.login}" />
     </a>
@@ -18,7 +18,7 @@ const repoInformationHTML = repos => {
   if (repos.length == 0) {
     return `<div class="clearfix repo-list">No repos!</div>`;
   }
-  var listItemsHTML = repos.map(repo => {
+  var listItemsHTML = repos.map(function(repo) {
     return `<li>
                     <a href="${repo.html_url}" target="_blank">${repo.name}</a>
                 </li>`;
@@ -35,7 +35,10 @@ const repoInformationHTML = repos => {
 };
 
 const fetchGitHubInformation = event => {
-  let username = $('#gh-username').val();
+  $('#gh-repo-data').html('');
+  $('#gh-user-data').html('');
+
+  var username = $('#gh-username').val();
   if (!username) {
     $('#gh-user-data').html('<h2>Please Enter GitHub User Name</h2>');
     return;
@@ -47,27 +50,27 @@ const fetchGitHubInformation = event => {
 
   $.when(
     $.getJSON(`https://api.github.com/users/${username}`),
-    $.getJSON(`https://api.github.com/users/${username}/repos`).then(
-      function(firstResponse, secondResponse) {
-        var userData = firstResponse[0];
-        var repoData = secondResponse[0];
-        console.log(userData, repoData);
-        $('#gh-user-data').html(userInformationHTML(userData));
+    $.getJSON(`https://api.github.com/users/${username}/repos`)
+  ).then(
+    function(firstResponse, secondResponse) {
+      var userData = firstResponse[0];
+      var repoData = secondResponse[0];
 
-        $('#gh-repo-data').html(repoInformationHTML(repoData));
-      },
-      function(errorResponse) {
-        if (errorResponse.status === 404) {
-          $('#gh-user-data').html(
-            `<h2>No info found for user ${username}</h2>`
-          );
-        } else {
-          console.log(errorResponse);
-          $('#gh-user-data').html(
-            `<h2>Error: ${errorResponse.responseJSON.message}</h2>`
-          );
-        }
+      $('#gh-user-data').html(userInformationHTML(userData));
+
+      $('#gh-repo-data').html(repoInformationHTML(repoData));
+    },
+    function(errorResponse) {
+      if (errorResponse.status === 404) {
+        $('#gh-user-data').html(`<h2>No info found for user ${username}</h2>`);
+      } else {
+        console.log(errorResponse);
+        $('#gh-user-data').html(
+          `<h2>Error: ${errorResponse.responseJSON.message}</h2>`
+        );
       }
-    )
+    }
   );
 };
+
+$(document).ready(fetchGitHubInformation);
